@@ -1,0 +1,5 @@
+Create a resume html page to be rendered in default root
+Create a dynamic route for reading subject and subject marks (float) 
+Create a dynamic route for generating a uuid for a subject 
+Create a static route for '/' and '/home' to render resume.html
+Create a navigation to navigate from home to about page using url_for
