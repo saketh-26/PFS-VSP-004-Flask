@@ -113,8 +113,31 @@ def readUserRecordbyEmail(user_data):
              connection.close()
              return "No Record"
 def readUserRecordbyId(user_data):
+    id=user_data['id']
+    connection=getConnectionWithDB()
+    if connection=='Connection Failed':
+        return False
+    else:
+        cursor=connection.cursor()
+        cursor.execute("SELECT * from users where id=%s",(id,))
+        data=cursor.fetchone()
+        try:
+            record={
+                'id':data[0],
+                'name':data[1],
+                'email':data[2],
+                'password_hash':data[3],
+                'is_verified':data[4],
+                'created_at':data[5]
+            }
+            cursor.close()
+            connection.close()
+            return record
+        except:
+            cursor.close()
+            connection.close()
+            return 'No record'
 
-    
 user_data = {"id":45}
 print(readUserRecordbyEmail(user_data))
 
