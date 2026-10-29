@@ -10,4 +10,6 @@ class Config():
     db_user = os.getenv("DB_USER")
     db_password = os.getenv("DB_PASSWORD")
     db_name = os.getenv("DB_NAME")
-    print(db_host,db_port,db_user,db_password,db_name)
+    from_email = os.getenv("FROM_EMAIL")
+    email_app_password = os.getenv("EMAIL_APP_PASSWORD")
+    #print(db_host,db_port,db_user,db_password,db_name)

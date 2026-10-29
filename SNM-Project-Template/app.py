@@ -1,7 +1,13 @@
 from config import Config
 import mysql.connector as sql
 import random
+import smtplib
+from email.message import EmailMessage
+from flask import Flask,render_template,redirect,url_for,request
+app = Flask(__name__)
 DBConfig = Config()
+from_email = DBConfig.from_email
+email_app_password = DBConfig.email_app_password
 #We will first make connection with DB
 def getConnectionWithDB():
     db_host = DBConfig.db_host
@@ -217,19 +223,64 @@ def updateVerifiedByIdorEmail(user_data):
 def generateOTP():
     otp = random.randint(1000,9999)
     return otp
-def sendOTPviaemail():
-    #Step:1 --> To whom we have to send OTP
-    #Step2: -->Through which account we have to send OTP
-    #Step3 --> FROM GMAIL -->APP password
-    #Step 4 -->Mail compose
-    #Step 5 -->Mail send
-    pass
+def sendOTPviaemail(to_email,otp):
+    message = EmailMessage()
+    message['Subject'] = "OTP Notification"
+    message['From'] = from_email
+    message['To'] = to_email
+    message.set_content(
+        f"Your OTP is {otp}"
+    )
+    with smtplib.SMTP("smtp.gmail.com",587) as server:
+        server.starttls()
+        server.login(from_email,email_app_password)
+        server.send_message(message)
+    return True
 
+#sendOTPviaemail('sakethreddy.kallepu@gmail.com',5423)
+def validateData(user_data):
+    errors =[]
+    name=user_data['name']
+    email=user_data['email']
+    password = user_data['password']
+    confirm_password = user_data['confirm_password']
 user_data = {'id':2,
-             'new_name':"Shekar",
+             'name':"Shekar",
              'email':'shekar1505@gmail.com',
              'new_password':'admin1234',
              'verified':True}
 #print(updateNamebyIDorEmail(user_data))
 #print(updateVerifiedByIdorEmail(user_data))
 #print(generateOTP())
+@app.route('/')
+def home():
+    return render_template('index.html')
+
+@app.route('/register',methods=['GET','POST'])
+def register():
+    if (request.method =="GET"):
+        return render_template('register.html')
+    elif (request.method=="POST"):
+        name = request.form['name']
+        email = request.form['email']
+        password = request.form['password']
+        confirm_password  = request.form['confirm_password']
+        user_data = {
+            "name":name,
+            "email":email,
+            "password":password,
+            "confirm_password":confirm_password
+        }
+        errors = validateData(user_data)
+        return render_template('register.html',
+                               errors=errors)
+@app.route('/login')
+def login():
+    return render_template('login.html')
+@app.route('/dashboard')
+def dashboard():
+    return render_template('dashboard.html')
+if (__name__ == "__main__"):
+    app.run(host="0.0.0.0",
+            port = 5003,
+            debug=True)
