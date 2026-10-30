@@ -4,10 +4,27 @@ import random
 import smtplib
 from email.message import EmailMessage
 from flask import Flask,render_template,redirect,url_for,request
+import bcrypt
+
 app = Flask(__name__)
 DBConfig = Config()
 from_email = DBConfig.from_email
 email_app_password = DBConfig.email_app_password
+
+#Encode -->Str to Bytes
+#Decode --> Bytes to Str
+#gensalt --> is it used to generate a key
+#how many rounds this key to iterate
+#gensalt(4)
+def generateHash(text):
+    btext=text.encode('utf-8')
+    cipher_text = bcrypt.hashpw(btext,bcrypt.gensalt(4))
+    return cipher_text.decode('utf-8')
+    #print(cipher_text,len(cipher_text))
+    #print(text[0],btext[0]) #returns encoded value
+    #print(type(btext))
+    #bcrypt.hashpw(btext)
+#generateHash("Saketh")
 #We will first make connection with DB
 def getConnectionWithDB():
     db_host = DBConfig.db_host
@@ -244,11 +261,31 @@ def validateData(user_data):
     email=user_data['email']
     password = user_data['password']
     confirm_password = user_data['confirm_password']
+    if name is None or len(name)<2:
+        errors.append("Invalid Name")
+    if email is None or len(email)<5:
+        errors.append("Invalid Email")
+    if password is None or len(password)<5:
+        errors.append("Invalid Password")
+    if password!=confirm_password:
+        errors.append("Password mismatch")
+    return errors
+def verifyDuplicateEmail(user_data):
+    #email = user_data['email']
+    record = readUserRecordbyEmail(user_data)
+    if (record=="No Record"):
+        return False  #duplicate ledu
+    else:
+        return True  #duplicate undi
+
 user_data = {'id':2,
-             'name':"Shekar",
+             'name':"",
              'email':'shekar1505@gmail.com',
+             'password':"12345",
+             'confirm_password':'123',
              'new_password':'admin1234',
              'verified':True}
+#print(validateData(user_data))
 #print(updateNamebyIDorEmail(user_data))
 #print(updateVerifiedByIdorEmail(user_data))
 #print(generateOTP())
@@ -272,15 +309,37 @@ def register():
             "confirm_password":confirm_password
         }
         errors = validateData(user_data)
-        return render_template('register.html',
+        if len(errors)>0:
+            return render_template('register.html',
                                errors=errors)
+        else:
+            is_duplicate = verifyDuplicateEmail(user_data)
+            if is_duplicate == False: #duplicate ledu
+                password_hash = generateHash(user_data['password'])
+                name = user_data['name']
+                email = user_data['email']
+                status = insertUserRecord({
+                    'name':name,
+                    'email':email,
+                    'password_hash':password_hash
+                })
+                if status == True:
+                    return render_template('register.html',
+                                  res="Registration Successfully Completed"
+                                  )
+                else:
+                    return render_template('register.html',
+                                           err="Registration Failed")
+            else: #duplicate undi
+                return render_template('register.html',
+                                       err="Account already exists")
 @app.route('/login')
 def login():
     return render_template('login.html')
 @app.route('/dashboard')
 def dashboard():
     return render_template('dashboard.html')
-if (__name__ == "__main__"):
+'''if (__name__ == "__main__"):
     app.run(host="0.0.0.0",
             port = 5003,
-            debug=True)
+            debug=True)'''
