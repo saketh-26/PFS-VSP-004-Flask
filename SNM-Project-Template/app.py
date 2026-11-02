@@ -3,14 +3,15 @@ import mysql.connector as sql
 import random
 import smtplib
 from email.message import EmailMessage
-from flask import Flask,render_template,redirect,url_for,request
+from flask import Flask,render_template,redirect,url_for,request,session
 import bcrypt
-
 app = Flask(__name__)
+app.secret_key = "Codegnan@123"
+
 DBConfig = Config()
 from_email = DBConfig.from_email
 email_app_password = DBConfig.email_app_password
-
+OTP = 0
 #Encode -->Str to Bytes
 #Decode --> Bytes to Str
 #gensalt --> is it used to generate a key
@@ -292,9 +293,10 @@ user_data = {'id':2,
 @app.route('/')
 def home():
     return render_template('index.html')
-
+OTP=0
 @app.route('/register',methods=['GET','POST'])
 def register():
+    global OTP
     if (request.method =="GET"):
         return render_template('register.html')
     elif (request.method=="POST"):
@@ -315,6 +317,10 @@ def register():
         else:
             is_duplicate = verifyDuplicateEmail(user_data)
             if is_duplicate == False: #duplicate ledu
+                #if there is no account 
+                #convert password to hash value
+                session['otp'] = generateOTP()
+                #OTP = generateOTP()
                 password_hash = generateHash(user_data['password'])
                 name = user_data['name']
                 email = user_data['email']
@@ -323,10 +329,15 @@ def register():
                     'email':email,
                     'password_hash':password_hash
                 })
+                #status of insertion
                 if status == True:
-                    return render_template('register.html',
-                                  res="Registration Successfully Completed"
-                                  )
+                    session['username'] = email
+                    session['otp'] = OTP
+                    sendOTPviaemail(email,OTP)
+                    return redirect('/verify')
+                    #return render_template('register.html',
+                                  #res="Registration Successfully Completed"
+                                  #)
                 else:
                     return render_template('register.html',
                                            err="Registration Failed")
@@ -339,6 +350,23 @@ def login():
 @app.route('/dashboard')
 def dashboard():
     return render_template('dashboard.html')
+
+@app.route('/verify',methods = ['GET','POST'])
+def verify():
+    global OTP
+    if request.method == "GET":
+        return render_template('verify.html')
+    elif request.method == "POST":
+        otp = request.form['otp']
+        otp = int(otp)
+        if otp == session['otp']:
+            is_verify = True
+            updateVerifiedByIdorEmail(
+                {'email':session['username'],'verified':is_verify})
+            return redirect('/login')
+        else:
+            return render_template('verify.html',err="Invalid OTP")
+
 if (__name__ == "__main__"):
     app.run(host="0.0.0.0",
             port = 5002,
