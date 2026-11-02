@@ -11,7 +11,6 @@ app.secret_key = "Codegnan@123"
 DBConfig = Config()
 from_email = DBConfig.from_email
 email_app_password = DBConfig.email_app_password
-OTP = 0
 #Encode -->Str to Bytes
 #Decode --> Bytes to Str
 #gensalt --> is it used to generate a key
@@ -293,10 +292,8 @@ user_data = {'id':2,
 @app.route('/')
 def home():
     return render_template('index.html')
-OTP=0
 @app.route('/register',methods=['GET','POST'])
 def register():
-    global OTP
     if (request.method =="GET"):
         return render_template('register.html')
     elif (request.method=="POST"):
@@ -319,8 +316,7 @@ def register():
             if is_duplicate == False: #duplicate ledu
                 #if there is no account 
                 #convert password to hash value
-                session['otp'] = generateOTP()
-                #OTP = generateOTP()
+                OTP = generateOTP()
                 password_hash = generateHash(user_data['password'])
                 name = user_data['name']
                 email = user_data['email']
@@ -353,7 +349,6 @@ def dashboard():
 
 @app.route('/verify',methods = ['GET','POST'])
 def verify():
-    global OTP
     if request.method == "GET":
         return render_template('verify.html')
     elif request.method == "POST":
