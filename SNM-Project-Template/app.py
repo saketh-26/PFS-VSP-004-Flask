@@ -341,5 +341,25 @@ def dashboard():
     return render_template('dashboard.html')
 if (__name__ == "__main__"):
     app.run(host="0.0.0.0",
-            port = 5003,
+            port = 5002,
             debug=True)
+#Registration Flow:
+#User --> register.html <--> Registration Form --> 
+# POST <-->Python  -->Collecting Data -->Validating -> 
+# Verifying -->Password to Password Hash <-->MYSQL Table
+
+#HTML <-> Python <-> MYSQL
+
+#@app.route('/register',methods = ['GET','POST'])
+#def register():
+#    if request.method == "GET":
+#       renderHTMLPage()
+#    elif request.method == "POST":
+#        collectUserData()
+#        validateUserData()
+#        displayErrors()
+#        status = verifyAccountExist()
+#        if status:
+#            insertRecord()
+#        else:
+#            displayErrorMessage()
