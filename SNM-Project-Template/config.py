@@ -13,3 +13,20 @@ class Config():
     from_email = os.getenv("FROM_EMAIL")
     email_app_password = os.getenv("EMAIL_APP_PASSWORD")
     #print(db_host,db_port,db_user,db_password,db_name)
+
+class emailTemplates():
+    def send_otp_template(otp:int,username:str):
+        template = f"""Hi {username},
+        Welcome to **SNS**!
+        To complete your registration,
+        please use the One-Time Password below:
+        **Your OTP is: {otp}**
+        This OTP is valid for **3 minutes**.Please don't share 
+        this code with anyone.If you didnot request this registration,
+        you can safely ignore this email.
+        
+        Best regards,
+        **SNS Team**
+        """
+        return template
+

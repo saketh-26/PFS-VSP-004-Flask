@@ -1,4 +1,4 @@
-from config import Config
+from config import Config,emailTemplates
 import mysql.connector as sql
 import random
 import smtplib
@@ -253,8 +253,27 @@ def sendOTPviaemail(to_email,otp):
         server.login(from_email,email_app_password)
         server.send_message(message)
     return True
-
 #sendOTPviaemail('sakethreddy.kallepu@gmail.com',5423)
+def SendEmail(subject:str,to_email:str,body:str):
+    message = EmailMessage()
+    message['Subject'] = subject
+    message['From']=from_email
+    message['To'] = to_email
+    message.set_content(body)
+    with smtplib.SMTP("smtp.gmail.com",587) as server:
+        server.starttls()
+        server.login(from_email,email_app_password)
+        server.send_message(message)
+    return True
+
+
+
+
+
+
+
+
+
 def validateData(user_data):
     errors =[]
     name=user_data['name']
@@ -329,7 +348,11 @@ def register():
                 if status == True:
                     session['username'] = email
                     session['otp'] = OTP
-                    sendOTPviaemail(email,OTP)
+                    #sendOTPviaemail(email,OTP)
+                    SendEmail(subject="Verify Your Registration - Notes Management",
+                              to_email=email,
+                              body=emailTemplates.send_otp_template(username=name,
+                                                                    otp=OTP))
                     return redirect('/verify')
                     #return render_template('register.html',
                                   #res="Registration Successfully Completed"
@@ -372,6 +395,22 @@ if (__name__ == "__main__"):
 # Verifying -->Password to Password Hash <-->MYSQL Table
 
 #HTML <-> Python <-> MYSQL
+
+#Registration FLow
+#User has to click on Get Started
+#Register page
+#Name,Email,Password,Confirm Password and submit
+#verifyDuplicateEmail() --> if account not exists
+#generate OTP
+#send email with otp
+#redirect to verify.html
+#enter the otp receiveed on email
+#if the otp matches with the session otp
+#it will redirect to login
+#if they are not matching,it redirects with a message
+
+
+
 
 #@app.route('/register',methods = ['GET','POST'])
 #def register():
