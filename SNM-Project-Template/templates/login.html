@@ -64,16 +64,17 @@ Login - SNS
         </button>
 
     </form>
-
-
     <p class="form-footer">
-
         Don't have an account?
-
         <a href="{{ url_for('register') }}">
             Register
+    </a>
+    </p>
+    <p class="form-footer">
+        Don't know Password?
+        <a href="{{ url_for('forgot_password')}}">
+            Forgot Password
         </a>
-
     </p>
 
 </div>
