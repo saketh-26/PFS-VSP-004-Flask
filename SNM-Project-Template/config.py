@@ -30,3 +30,20 @@ class emailTemplates():
         """
         return template
 
+    def send_reset_password_template(username:str,
+                                     url:str,
+                                     time:int):
+        template=f"""Hi {username}
+        We have received a request to reset the password for your
+        ***SNS** account.To reset your password,please click
+        the below:
+        reset URL: {url}
+        This password reset link is valid for 
+        **{time} minutes**.Please donot share this link with anyone.
+        If you didnot request a password reset,you can safely ignore
+        this email.
+        Best regards,
+        **SNS Team**
+        """
+        return template
+

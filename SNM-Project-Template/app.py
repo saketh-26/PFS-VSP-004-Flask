@@ -5,6 +5,9 @@ import smtplib
 from email.message import EmailMessage
 from flask import Flask,render_template,redirect,url_for,request,session
 import bcrypt
+#Setting up a secure way to generate and verify timed
+#tokens in Flask app
+from itsdangerous import URLSafeTimedSerializer,BadSignature,TimedSerializer
 app = Flask(__name__)
 app.secret_key = "Codegnan@123"
 
@@ -308,6 +311,30 @@ user_data = {'id':2,
 #print(updateNamebyIDorEmail(user_data))
 #print(updateVerifiedByIdorEmail(user_data))
 #print(generateOTP())
+serializer = URLSafeTimedSerializer(app.secret_key)
+def resetPasswordTokenGenerate(email):
+    token = serializer.dumps(
+        email,
+        salt="reset-password"
+    )
+    return token
+def validateToken(token):
+    try:
+        data = serializer.loads(
+            token,
+            salt="reset-password",
+            max_age = 300
+        )
+        return data
+    except BadSignature:
+        return "Invalid"
+    except TimedSerializer: #if token timeout
+        return "Timeout"
+
+
+
+
+
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -363,6 +390,43 @@ def register():
             else: #duplicate undi
                 return render_template('register.html',
                                        err="Account already exists")
+#forgot password route
+@app.route("/forgot_password",methods=['GET','POST'])
+def forgot_password():
+    if request.method == "GET":
+        return render_template("forgot_password.html")
+    if request.method == "POST":
+        email = request.form.get("email",None)
+        #check whether the email exists in db or not
+        data = {'email':email}
+        record = readUserRecordbyEmail(user_data=data)
+        if 'id' in record:
+            #send mail generation of token
+            token = resetPasswordTokenGenerate(
+                email=email)
+            #reset password url
+            reset_url = url_for('reset_password',
+                                token=token,
+                                _external=True)
+            email_status = SendEmail(
+                subject = "Reset Password - SNS"
+                to_email=email,
+                body = emailTemplates.send_reset_password_template(
+                    username=record['name'],
+                    url=reset_url,
+                    time=5
+                ))
+            if email_status:
+                return render_template("forgot_password.html",
+                                       msg="Email has been sent")
+            else:
+                return render_template("forgot_password.html",
+                                       error = "Unable to send email")
+        else:
+            return render_template("forgot_password.html",
+                                   error="Enter a Valid email")
+
+
 @app.route('/login')
 def login():
     return render_template('login.html')
