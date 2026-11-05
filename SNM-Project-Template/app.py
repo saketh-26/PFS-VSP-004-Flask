@@ -473,7 +473,7 @@ def login():
         print("Login Data:",record)
         if record:
             #if data exists
-            if record['is_verified'] == True:
+            if record['is_verified'] == 0:
                 login_status = bcrypt.checkpw(password.encode('utf-8'),
                                               record['password_hash'].encode('utf-8')
                                               )
@@ -483,7 +483,7 @@ def login():
                     session['email'] = email
                     session['id'] = record['id']
                     session['name'] = record['name']
-                    return render_template('/dashboard')
+                    return redirect('/dashboard')
                 else:
                     return redirect('/login')
             else:
