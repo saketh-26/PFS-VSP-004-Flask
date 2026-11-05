@@ -409,7 +409,7 @@ def forgot_password():
                                 token=token,
                                 _external=True)
             email_status = SendEmail(
-                subject = "Reset Password - SNS"
+                subject = "Reset Password - SNS",
                 to_email=email,
                 body = emailTemplates.send_reset_password_template(
                     username=record['name'],
@@ -425,8 +425,42 @@ def forgot_password():
         else:
             return render_template("forgot_password.html",
                                    error="Enter a Valid email")
-
-
+#reset-password route
+@app.route('/reset-password/<string:token>',
+           methods=['GET','POST'])
+def reset_password(token):
+    token_status= validateToken(token=token)
+    if token_status=="Invalid":
+        return render_template('forgot_password.html',
+                               error="Invalid URL")
+    elif token_status=="Timeout":
+        return render_template('forgot_password.html',
+                               error="URL Expired")
+    email = token_status
+    if request.method == "GET":
+        return render_template('reset_password.html',
+                               token=token)
+    #POST request
+    if request.method == "POST":
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password'
+                                            )
+        if new_password == confirm_password:
+            #generate hash password
+            password_hash = generateHash(text = new_password)
+            #update the password in the database
+            data = {'email':email,
+                    'new_password':password_hash}
+            update = updatePasswordByIdorEmail(user_data=data)
+            if update:
+                #redirect to login page
+                return redirect('/login')
+            else:
+                return render_template('reset_password.html')
+        else:
+            return render_template('reset_password.html',
+                                   error="Password mismatch")
+        
 @app.route('/login')
 def login():
     return render_template('login.html')
