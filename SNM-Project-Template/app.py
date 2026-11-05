@@ -460,10 +460,36 @@ def reset_password(token):
         else:
             return render_template('reset_password.html',
                                    error="Password mismatch")
-        
-@app.route('/login')
+@app.route('/login',methods=['GET','POST'])
 def login():
-    return render_template('login.html')
+    if request.method == "GET":
+        return render_template('login.html')
+    elif request.method == "POST":
+        email = request.form['email']
+        password= request.form['password']
+        #we have to check account existed or not
+        user_data = {'email':email}
+        record = readUserRecordbyEmail(user_data=user_data)
+        print("Login Data:",record)
+        if record:
+            #if data exists
+            if record['is_verified'] == True:
+                login_status = bcrypt.checkpw(password.encode('utf-8'),
+                                              record['password_hash'].encode('utf-8')
+                                              )
+                print(login_status)
+                if login_status:
+                    #create a session,inside that we need to store email
+                    session['email'] = email
+                    session['id'] = record['id']
+                    session['name'] = record['name']
+                    return render_template('/dashboard')
+                else:
+                    return redirect('/login')
+            else:
+                return redirect('/login')
+        else:
+            return redirect('/login') 
 @app.route('/dashboard')
 def dashboard():
     return render_template('dashboard.html')
@@ -485,7 +511,7 @@ def verify():
 
 if (__name__ == "__main__"):
     app.run(host="0.0.0.0",
-            port = 5002,
+            port = 5003,
             debug=True)
 #Registration Flow:
 #User --> register.html <--> Registration Form --> 
