@@ -498,7 +498,16 @@ def dashboard():
         return redirect("/login")
     return render_template('dashboard.html',
                            username=session['name'])
-
+#profile route
+@app.route('/user/profile',methods=['GET'])
+def profile():
+    if "id" not in session:
+        redirect('/login')
+    name = session['name']
+    email = session['email']
+    return render_template("profile.html",
+                           email=email,
+                           name=name)
 @app.route('/verify',methods = ['GET','POST'])
 def verify():
     if request.method == "GET":
@@ -513,6 +522,23 @@ def verify():
             return redirect('/login')
         else:
             return render_template('verify.html',err="Invalid OTP")
+#----------------------------
+#       Notes Routes
+#-----------------------------
+@app.route('/notes',methods=['GET','POST'])
+def addnotes():
+    if "id" not in session:
+        return redirect('/login')
+    if request.method == "GET":
+        return render_template("notes.html")
+#logout route
+@app.route("/logout",methods=['GET'])
+def logout():
+    #if id in session
+    session.pop('id',None)
+    session.pop('name',None)
+    session.pop('email',None)
+    return redirect('/login')
 
 if (__name__ == "__main__"):
     app.run(host="0.0.0.0",
