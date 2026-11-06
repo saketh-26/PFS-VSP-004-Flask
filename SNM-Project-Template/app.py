@@ -473,7 +473,7 @@ def login():
         print("Login Data:",record)
         if record:
             #if data exists
-            if record['is_verified'] == 0:
+            if record['is_verified'] == 1:
                 login_status = bcrypt.checkpw(password.encode('utf-8'),
                                               record['password_hash'].encode('utf-8')
                                               )
