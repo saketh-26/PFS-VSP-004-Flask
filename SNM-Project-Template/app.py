@@ -490,9 +490,14 @@ def login():
                 return redirect('/login')
         else:
             return redirect('/login') 
+
 @app.route('/dashboard')
 def dashboard():
-    return render_template('dashboard.html')
+    #if the user data is not in the session redirect to login page
+    if "id" not in session:
+        return redirect("/login")
+    return render_template('dashboard.html',
+                           username=session['name'])
 
 @app.route('/verify',methods = ['GET','POST'])
 def verify():

@@ -1,17 +1,15 @@
 {% extends "base.html" %}
-
-
 {% block title %}
 Dashboard - SNS
 {% endblock %}
-
-
+{% block navmenu %}
+    <a href="{{url_for('profile')}}">Profile</a>
+    <a href="{{url_for('logout')}}">Logout</a>
+{% endblock %}
 {% block content %}
-
 <section class="dashboard-header">
 
     <div>
-
         <h1>
             Welcome, {{ username }}
         </h1>
@@ -19,24 +17,18 @@ Dashboard - SNS
         <p>
             Manage your notes from your dashboard.
         </p>
-
     </div>
 
-
     <a
-        href="/notes/add"
+        href="/notes"
         class="btn btn-primary"
     >
-        + Add Note
+        My Notes
     </a>
-
 </section>
 
-
 <section class="stats">
-
     <div class="stat-card">
-
         <h3>
             {{ total_notes }}
         </h3>

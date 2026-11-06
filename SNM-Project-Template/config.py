@@ -46,4 +46,3 @@ class emailTemplates():
         **SNS Team**
         """
         return template
-
