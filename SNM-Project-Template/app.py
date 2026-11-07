@@ -558,6 +558,132 @@ def mynotes():
                                    notes = notes)
         else:
             return render_template('notes.html',err=notes)
+#insert notes records in table
+def addNotesRecord(user_id:int,title:str,content:str):
+    try:
+        connection = getConnectionWithDB()
+        if connection == "Connection Failed":
+            return False,"Database Connection Failed"
+        else:
+            cursor = connection.cursor()
+            add_notes_query = """INSERT INTO NOTES(user_id,
+            title,content) values(%s,%s,%s)"""
+            cursor.execute(add_notes_query,(user_id,
+                                            title,content))
+            connection.commit()
+            cursor.close()
+            connection.close()
+            return True,"Notes Saved"
+    except Exception as e:
+        return False,f'Exception raised in add notes:{e}'
+    
+#add notes route
+@app.route('/notes/addnotes',methods=['GET','POST'])
+def add_notes():
+    if "id" not in session:
+        return redirect('/login')
+    #GET request
+    if request.method == "GET":
+        return render_template('addnotes.html')
+    #POST request
+    if request.method == "POST":
+        title = request.form.get('Title',"No Title")
+        content = request.form.get('content',"No Content")
+        #store in database
+        status,msg = addNotesRecord(
+            user_id = session['id'],
+            title = title,
+            content=content
+        )
+        if status == True:
+            #redirect to notes dashboard
+            return render_template('notes.html',msg=msg)
+        else:
+            return render_template('notes.html',err=msg)
+
+#get notes by id
+def getNotesById(notes_id):
+    try:
+        connection = getConnectionWithDB()
+        if connection == "Connection Failed":
+            return False,"Database Connection Failed"
+        else:
+            cursor = connection.cursor(dictionary=True)
+            get_notes_by_id = """select title,content from notes
+            where id=%s;"""
+            cursor.execute(get_notes_by_id,(notes_id,))
+            notes = cursor.fetchone()
+            cursor.close()
+            connection.close()
+            return True,notes
+    except Exception as e:
+        return False,f'Exception raised in View Notes:{e}'
+#view notes route
+@app.route('/notes/view/<int:note_id>')
+def view_notes(note_id):
+    #get notes from thedatabase based on notesid
+    status,notes = getNotesById(notes_id=note_id)
+    if status == True:
+        title = notes['title']
+        content = notes['content']
+        return render_template('viewnotes.html',title=title,
+                               content=content)
+    else:
+        return render_template('notes.html',err=notes)
+#update notes by id
+def updateNotesByID(notes_id:int,title:str,content:str):
+    try:
+        connection = getConnectionWithDB()
+        if connection == "Connection Failed":
+            return False,"Database Connection Failed"
+        else:
+            cursor= connection.cursor()
+            update_notes_by_id = """update notes 
+            set title=%s,content=%s where id=%s;"""
+            cursor.execute(update_notes_by_id,(title,
+                                               content,notes_id))
+            connection.commit()
+            cursor.close()
+            connection.close()
+            return True,"Notes Updated"
+    except Exception as e:
+        return False,f"Exception raised in update notes:{e}"
+#edit notes route
+@app.route('/notes/edit/<int:note_id>',methods=['GET','POST'])
+def edit_notes(note_id):
+    #get notes from the database
+    if request.method == "GET":
+        status,notes=getNotesById(notes_id=note_id)
+        if status == True:
+            return render_template('updatenotes.html',
+                                   title=notes['title'],
+                                   content=notes['content'],
+                                   notes_id=note_id)
+        else:
+            return render_template('notes.html',err=notes)
+    #post request
+    if request.method == "POST":
+        title = request.form.get('title')
+        content = request.form.get('content')
+        print(title,content)
+        #update notes content in database as per notes id
+        status,msg = updateNotesByID(
+            title=title,content=content,notes_id=note_id)
+        _,notes = getNotesByUserId(user_id=session['id'])
+        if status == True:
+            return render_template('notes.html',msg=msg,
+                                   notes=notes)
+        else:
+            return render_template('notes.html',err=msg,
+                                   notes=notes)
+        
+
+
+
+
+
+
+
 #logout route
 @app.route("/logout",methods=['GET'])
 def logout():
