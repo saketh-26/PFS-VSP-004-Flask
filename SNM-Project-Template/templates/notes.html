@@ -1,28 +1,38 @@
 {% extends "base.html" %}
-
-
 {% block title %}
 My Notes - SNS
 {% endblock %}
 
+{% block navmenu %}
+    <a href= "{{url_for('dashboard')}}">Dashboard</a>
+    <a href= "{{url_for('myfiles')}}">Files</a>
+    <a href= "{{url_for('mynotes')}}">Notes</a>
+    <a href= "{{url_for('profile')}}">Profile</a>
+    <a href= "{{url_for('logout')}}">Logout</a>
+{% endblock %}
+
 
 {% block content %}
-
 <div class="page-header">
-
     <h1>
         My Notes
     </h1>
-
     <a
-        href="/notes/add"
+        href="{{url_for('add_notes')}}"
         class="btn btn-primary"
     >
         Add Note
     </a>
-
 </div>
 
+<div>
+    {% if msg %}
+        <p style="color:green;">{{msg}}</p>
+    {% endif %}
+    {% if err %}
+        <p style="color: red;">{{err}}</p>
+    {% endif %}
+</div>
 
 {% if notes %}
 
@@ -40,24 +50,22 @@ My Notes - SNS
             {{ note.content }}
         </p>
 
-
         <div class="note-actions">
 
             <a
-                href="/notes/{{ note.id }}"
+                href="/notes/view/{{ note.id }}"
                 class="btn btn-secondary"
             >
                 View
             </a>
             <a
-                href="/notes/{{ note.id }}/edit"
+                href="/notes/edit/{{ note.id }}"
                 class="btn btn-edit"
             >
                 Edit
             </a>
-
             <a
-                href="/notes/{{ note.id }}/delete"
+                href="/notes/delete/{{ note.id }}"
                 class="btn btn-danger"
             >
                 Delete
