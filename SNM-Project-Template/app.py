@@ -676,13 +676,36 @@ def edit_notes(note_id):
         else:
             return render_template('notes.html',err=msg,
                                    notes=notes)
-        
+#delete notes by id
+def deleteNotesById(notes_id):
+    try:
+        connection = getConnectionWithDB()
+        if connection == "Connection Failed":
+            return False,"Database Connection Failed"
+        else:
+            cursor = connection.cursor()
+            delete_notes_by_id = """delete from notes
+            where id=%s;"""
+            cursor.execute(delete_notes_by_id,(notes_id,))
+            connection.commit()
+            cursor.close()
+            connection.close()
+            return True,"Notes Deleted"
+    except Exception as e:
+        return False,f'Exception raised in delete notes:{e}'
 
-
-
-
-
-
+#delete notes route
+@app.route('/notes/delete/<int:note_id>',methods=['GET','POST'])
+def delete_notes(note_id):
+    #delete notes from database based on the note_id
+    status,msg = deleteNotesById(notes_id=note_id)
+    _,notes = getNotesByUserId(user_id=session['id'])
+    if status==True:
+        return render_template('notes.html',msg=msg,
+                               notes=notes)
+    else:
+        return render_template('notes.html',err=msg,
+                               notes=notes)
 
 #logout route
 @app.route("/logout",methods=['GET'])
