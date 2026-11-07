@@ -9,8 +9,6 @@ Update Notes - SNS
     <a href= "{{url_for('profile')}}">Profile</a>
     <a href= "{{url_for('logout')}}">Logout</a>
 {% endblock %}
-
-
 {% block content %}
 <div class="form-container">
     <h1>
@@ -29,8 +27,8 @@ Update Notes - SNS
         </label>
         <input
             type="text"
-            id="Title"
-            name="Title"
+            id="title"
+            name="title"
             placeholder="Enter your Notes Title"
             value="{{ title }}"
             required

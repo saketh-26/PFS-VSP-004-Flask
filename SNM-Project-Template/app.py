@@ -534,7 +534,7 @@ def getNotesByUserId(user_id):
             cursor = connection.cursor(dictionary=True)
             get_notes_by_id="""SELECT * FROM NOTES WHERE
             USER_ID = %s;"""
-            cursor.execute(get_notes_by_id(user_id,))
+            cursor.execute(get_notes_by_id,(user_id,))
             notes = cursor.fetchall()
             connection.commit()
             cursor.close()
@@ -641,7 +641,8 @@ def updateNotesByID(notes_id:int,title:str,content:str):
             update_notes_by_id = """update notes 
             set title=%s,content=%s where id=%s;"""
             cursor.execute(update_notes_by_id,(title,
-                                               content,notes_id))
+                                               content,
+                                               notes_id))
             connection.commit()
             cursor.close()
             connection.close()
