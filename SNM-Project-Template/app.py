@@ -525,12 +525,39 @@ def verify():
 #----------------------------
 #       Notes Routes
 #-----------------------------
+def getNotesByUserId(user_id):
+    try:
+        connection = getConnectionWithDB()
+        if connection == "Connection Failed":
+            return False,"Database connection Failed"
+        else:
+            cursor = connection.cursor(dictionary=True)
+            get_notes_by_id="""SELECT * FROM NOTES WHERE
+            USER_ID = %s;"""
+            cursor.execute(get_notes_by_id(user_id,))
+            notes = cursor.fetchall()
+            connection.commit()
+            cursor.close()
+            connection.close()
+            return True,notes
+    except Exception as e:
+        return False,f'Exception raised in add notes:{e}' 
+
 @app.route('/notes',methods=['GET','POST'])
-def addnotes():
+def mynotes():
     if "id" not in session:
         return redirect('/login')
     if request.method == "GET":
-        return render_template("notes.html")
+        #get user notes from the database
+        id = session['id']
+        print(id)
+        status,notes = getNotesByUserId(user_id=id)
+        print(notes)
+        if status == True:
+            return render_template("notes.html",
+                                   notes = notes)
+        else:
+            return render_template('notes.html',err=notes)
 #logout route
 @app.route("/logout",methods=['GET'])
 def logout():
