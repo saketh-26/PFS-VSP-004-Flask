@@ -718,13 +718,44 @@ def myfiles():
     if request.method == "GET":
         return render_template('files.html')
 
+#check file exist in allowed types
+def checkFileAllowed(filename):
+    allow_types = ['pdf','doc','jpeg','jpg','png','svg','csv',
+                   'xml','txt']
+    if "." in filename and filename.split('.')[1] in allow_types:
+        return True
+    else:
+        return False
+
+#check duplicate file
+
+
+
 #upload file route
 @app.route('/files/upload',methods=['GET','POST'])
 def uploadFile():
     if "id" not in session:
         return redirect('/login')
-    pass
+    if request.method == "GET":
+        return render_template('uploadFile.html')
+    #post request
+    if request.method == "POST":
+        #get file from form
+        file = request.form.get('file')
+        if file and file.filename != "":
+            #check the valid allowed types of files
+            #check file is duplicate or not
+            filename = file.filename
+            secure_filename=
 
+        #get file metadata
+        #check file in allowed types
+        #give secure filename
+        #store filemeta data in database
+        #redirect to files dashboard
+
+
+    
 #view file
 @app.route('/files/view/<file_id>')
 def viewFile():
