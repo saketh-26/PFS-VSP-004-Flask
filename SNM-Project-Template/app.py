@@ -708,6 +708,46 @@ def delete_notes(note_id):
         return render_template('notes.html',err=msg,
                                notes=notes)
 
+#------------------------------
+#           FILES
+#-----------------------------
+@app.route('/files')
+def myfiles():
+    if "id" not in session:
+        return redirect('/login')
+    if request.method == "GET":
+        return render_template('files.html')
+
+#upload file route
+@app.route('/files/upload',methods=['GET','POST'])
+def uploadFile():
+    if "id" not in session:
+        return redirect('/login')
+    pass
+
+#view file
+@app.route('/files/view/<file_id>')
+def viewFile():
+    if "id" not in session:
+        return redirect('/login')
+    pass
+
+#download file
+@app.route('/files/download/<file_id>')
+def downloadFile():
+    if "id" not in session:
+        return redirect('/login')
+    pass
+
+#delete file
+@app.route('/files/delete/<file_id>')
+def deleteFile():
+    if "id" not in session:
+        return redirect('/login')
+    pass
+
+
+
 #logout route
 @app.route("/logout",methods=['GET'])
 def logout():
