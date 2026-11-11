@@ -5,6 +5,13 @@ import smtplib
 from email.message import EmailMessage
 from flask import Flask,render_template,redirect,url_for,request,session
 import bcrypt
+from werkzeug.utils import secure_filename
+import os
+import sys
+
+#create an upload folder if not exists
+if not os.path.exists('upload'):
+    os.mkdir('upload') #it will create a folder..
 #Setting up a secure way to generate and verify timed
 #tokens in Flask app
 from itsdangerous import URLSafeTimedSerializer,BadSignature,TimedSerializer
@@ -473,7 +480,7 @@ def login():
         print("Login Data:",record)
         if record:
             #if data exists
-            if record['is_verified'] == 1:
+            if record['is_verified'] == True:
                 login_status = bcrypt.checkpw(password.encode('utf-8'),
                                               record['password_hash'].encode('utf-8')
                                               )
@@ -728,7 +735,26 @@ def checkFileAllowed(filename):
         return False
 
 #check duplicate file
-
+def checkFileDuplicate(userid,filename):
+    try:
+        connection = getConnectionWithDB()
+        if connection == "Connection Failed":
+            return False,"Database Connection Failed"
+        else:
+            cursor = connection.cursor()
+            check_file_duplicate = """select * from file_data
+            where stored_name = %s and user_id=%s;"""
+            cursor.execute(check_file_duplicate,(filename,
+                                                 userid))
+            record = cursor.fetchone()
+            cursor.close()
+            connection.close()
+            if record:
+                return False,"Duplicate file is present"
+            else:
+                return True, "Not a Duplicate file"
+    except Exception as e:
+        return False,f"Exception raised in file: {e}"
 
 
 #upload file route
