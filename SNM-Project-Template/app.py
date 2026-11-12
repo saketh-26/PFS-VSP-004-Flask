@@ -3,7 +3,7 @@ import mysql.connector as sql
 import random
 import smtplib
 from email.message import EmailMessage
-from flask import Flask,render_template,redirect,url_for,request,session
+from flask import Flask,render_template,redirect,url_for,request,session,flash
 import bcrypt
 from werkzeug.utils import secure_filename
 import os
@@ -775,7 +775,7 @@ def UploadFileInDB(userid,filename,stored_name,type,size,path):
             connection.close()
             return True,"File Uploaded"
     except Exception as e:
-        return False,f'Exceptiom raised in File upload:{e}'
+        return False,f'Exception raised in File upload:{e}'
 
 #get file metadata by file_id
 def getFileByFileId(fileid):
@@ -816,14 +816,51 @@ def uploadFile():
             if checkFileAllowed(filename=filename):
                 #check the valid allowed types of files
                 filename_secure=secure_filename(filename)
-                file.save('/upload')
-                file_size = os.path.getsize(filename=
-                                            f'upload/{filename}')
-                file_type = filename.split('.')[1]
-                #insert file metadata in database
-                #get file metadata
-                #store filemeta data in database
-                #redirect to files dashboard
+                #check the file in allowed types
+                status,msg = checkFileDuplicate(
+                    userid=session['id'],
+                    filename= filename_secure
+                )
+                if status == True:
+                    #save the file
+                    upload_path = os.path.join('upload',
+                                               filename_secure)
+                    file.save(upload_path) 
+                    #get the file information 
+                    file_size = os.path.getsize(upload_path)
+                    file_type = os.path.splitext(filename_secure)[1].lower().lstrip('.')
+                    #path stored in the DB 
+                    filepath = f'/upload/{filename_secure}'
+                    #insert file metadata in database
+                    status,msg = UploadFileInDB(userid=session['id'],
+                                                filename=filename,
+                                                stored_name=filename_secure,
+                                                type=file_type,
+                                                size=file_size,
+                                                path=filepath)
+                    if status==True:
+                        flash(msg,"msg")
+                        return redirect('/files')
+                    else:
+                        flash(msg,"err")
+                        return redirect('/files')
+                else:
+                    flash(msg,"err")
+                    return redirect('/files')
+            else:
+                flash("File type not allowed","err")
+                return redirect('/files')
+            #render_template -->returns HTML directly to currentURL
+            #redirect --> instructs the browser to make a new requesr to 
+            #a different URL
+        else:
+            flash("File not uploaded","err")
+            return redirect('/files')
+
+
+
+
+               
 
 
     
