@@ -757,7 +757,8 @@ def checkFileDuplicate(userid,filename):
         return False,f"Exception raised in file: {e}"
 
 #insert files into table
-def UploadFileInDB(userid,filename,stored_name,type,size,path):
+def UploadFileInDB(userid,
+                   filename,stored_name,type,size,path):
     try:
         connection = getConnectionWithDB()
         if connection == "Connection Failed":
@@ -765,8 +766,9 @@ def UploadFileInDB(userid,filename,stored_name,type,size,path):
         else:
             cursor = connection.cursor()
             insert_filedata_query= """insert into file_data
-            (user_id,original_name,stored_name,mime_type,
-            size_bytes,storage_path) values(%s,%s,%s,%s,%s,%s);"""
+                        (user_id,original_name,stored_name,mime_type,
+                         size_bytes,storage_path) 
+                         values(%s,%s,%s,%s,%s,%s);"""
             cursor.execute(insert_filedata_query,
                            (userid,filename,stored_name,
                             type,size,path))
@@ -809,7 +811,7 @@ def uploadFile():
     #post request
     if request.method == "POST":
         #get file from form
-        file = request.form.get('file')
+        file = request.files.get('file')
         if file and file.filename != "":
             #check file in allowed types
             filename = file.filename
@@ -821,6 +823,7 @@ def uploadFile():
                     userid=session['id'],
                     filename= filename_secure
                 )
+                print(filename_secure)
                 if status == True:
                     #save the file
                     upload_path = os.path.join('upload',
@@ -856,13 +859,6 @@ def uploadFile():
         else:
             flash("File not uploaded","err")
             return redirect('/files')
-
-
-
-
-               
-
-
     
 #view file
 @app.route('/files/view/<file_id>')
