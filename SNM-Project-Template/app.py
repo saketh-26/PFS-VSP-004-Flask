@@ -915,14 +915,14 @@ def deleteFileByFileId(fileid):
         if connection == "Connection Failed":
             return False,"Database Connection Failed"
         else:
-            cursor = connection.cursor(dictionary=True)
+            cursor = connection.cursor()
             delete_file_by_userid = """delete from file_data
                                 where id = %s;"""
             cursor.execute(delete_file_by_userid,(fileid,))
             connection.commit()
             cursor.close()
             connection.close()
-            return True
+            return True,"File Deleted Successfully"
     except Exception as e:
         return False,f'Exception raised in View File:{e}'
 
@@ -976,18 +976,12 @@ def deleteFile(file_id):
         return redirect('/login')
     if request.method == "GET":
             #get file by file_id
-            status,file = deleteFileByFileId(fileid=file_id)
+            status,msg = deleteFileByFileId(fileid=file_id)
             if status == True:
-                secure_filename = file['stored_name']
-                mime_type, _ = mimetypes.guess_type(
-                    secure_filename)
-                return send_file(
-                    f'upload/{secure_filename}',
-                    mimetype=mime_type,
-                    as_attachment=True
-                )
+                flash(msg,"msg")
+                return redirect('/files')
             else:
-                flash(file,"err")
+                flash(msg,"err")
                 return redirect('/files')
 #logout route
 @app.route("/logout",methods=['GET'])
