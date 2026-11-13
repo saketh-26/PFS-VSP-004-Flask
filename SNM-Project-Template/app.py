@@ -718,12 +718,40 @@ def delete_notes(note_id):
 #------------------------------
 #           FILES
 #-----------------------------
+#fetch the files 
+def GetFilesbyUserId(userid):
+    try:
+        connection = getConnectionWithDB()
+        if connection == "Connection Failed":
+            return False,"Database Connection Failed"
+        else:
+            cursor = connection.cursor()
+            get_file_by_userid = """select * from file_data
+            where user_id=%s;"""
+            cursor.execute(get_file_by_userid,(userid,))
+            files=cursor.fetchall()
+            cursor.close()
+            connection.close()
+            return True,files
+    except Exception as e:
+        return False,f'Exception raised in Files:{e}'
+
 @app.route('/files')
 def myfiles():
     if "id" not in session:
         return redirect('/login')
     if request.method == "GET":
-        return render_template('files.html')
+        userid=session['id']
+        #get all the files
+        status,files = GetFilesbyUserId(userid=userid)
+        print(files)
+        if status:
+            return render_template('files.html',
+                                   files=files)
+        else:
+            msg = files
+            flash(msg,"err")
+            return render_template('files.html')
 
 #check file exist in allowed types
 def checkFileAllowed(filename):
