@@ -3,7 +3,7 @@ import mysql.connector as sql
 import random
 import smtplib
 from email.message import EmailMessage
-from flask import Flask,render_template,redirect,url_for,request,session,flash
+from flask import Flask,render_template,redirect,url_for,request,session,flash,send_file
 import bcrypt
 from werkzeug.utils import secure_filename
 import os
@@ -726,6 +726,8 @@ def GetFilesbyUserId(userid):
             return False,"Database Connection Failed"
         else:
             cursor = connection.cursor(dictionary=True)
+            #dictionary = True enables filename to be printed
+            #in files page as it fetches fileid and storedname
             get_file_by_userid = """select * from file_data
             where user_id=%s;"""
             cursor.execute(get_file_by_userid,(userid,))
@@ -757,7 +759,7 @@ def myfiles():
 #check file exist in allowed types
 def checkFileAllowed(filename):
     allow_types = ['pdf','doc','jpeg','jpg','png','svg','csv',
-                   'xml','txt']
+                   'xml','txt','py']
     if "." in filename and filename.split('.')[1] in allow_types:
         return True
     else:
@@ -888,13 +890,46 @@ def uploadFile():
         else:
             flash("File not uploaded","err")
             return redirect('/files')
-    
+
+#get file metadata by file id
+def getFileByFileId(fileid):
+    try:
+        connection = getConnectionWithDB()
+        if connection == "Connection Failed":
+            return False,"Database Connection Failed"
+        else:
+            cursor = connection.cursor(dictionary=True)
+            get_file_by_userid = """select * from file_data
+                                where id = %s;"""
+            cursor.execute(get_file_by_userid,(fileid,))
+            file=cursor.fetchone()
+            cursor.close()
+            connection.close()
+            return True,file
+    except Exception as e:
+        return False,f'Exception rasied in View File:{e}'
+
+
+import mimetypes
 #view file
 @app.route('/files/view/<file_id>')
-def viewFile():
+def viewFile(file_id):
     if "id" not in session:
         return redirect('/login')
-    pass
+    if request.method == "GET":
+        #get the file by file_id
+        status,file = getFileByFileId(fileid=file_id)
+        if status == True:
+            secure_filename = file['stored_name']
+            mime_type,_ = mimetypes.guess_type(secure_filename)
+            return send_file(
+                f'upload/{secure_filename}',
+                mimetype=mime_type,
+                as_attachment=False
+            )
+        else:
+            flash(file,'err')
+            return redirect('/files')
 
 #download file
 @app.route('/files/download/<file_id>')
