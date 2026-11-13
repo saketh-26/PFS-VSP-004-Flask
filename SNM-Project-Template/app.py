@@ -933,11 +933,24 @@ def viewFile(file_id):
 
 #download file
 @app.route('/files/download/<file_id>')
-def downloadFile():
+def downloadFile(file_id):
     if "id" not in session:
         return redirect('/login')
-    pass
-
+    if request.method == "GET":
+        #get file by file_id
+        status,file = getFileByFileId(fileid=file_id)
+        if status == True:
+            secure_filename = file['stored_name']
+            mime_type, _ = mimetypes.guess_type(
+                secure_filename)
+            return send_file(
+                f'upload/{secure_filename}',
+                mimetype=mime_type,
+                as_attachment=True
+            )
+        else:
+            flash(file,"err")
+            return redirect('/files')
 #delete file
 @app.route('/files/delete/<file_id>')
 def deleteFile():
