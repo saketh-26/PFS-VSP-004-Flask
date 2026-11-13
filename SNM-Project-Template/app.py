@@ -830,8 +830,6 @@ def getFileByFileId(fileid):
     
 
 
-
-
 #upload file route
 @app.route('/files/upload',methods=['GET','POST'])
 def uploadFile():
@@ -909,6 +907,26 @@ def getFileByFileId(fileid):
     except Exception as e:
         return False,f'Exception rasied in View File:{e}'
 
+#delete file 
+#get file metadata by file id
+def deleteFileByFileId(fileid):
+    try:
+        connection = getConnectionWithDB()
+        if connection == "Connection Failed":
+            return False,"Database Connection Failed"
+        else:
+            cursor = connection.cursor(dictionary=True)
+            delete_file_by_userid = """delete from file_data
+                                where id = %s;"""
+            cursor.execute(delete_file_by_userid,(fileid,))
+            connection.commit()
+            cursor.close()
+            connection.close()
+            return True
+    except Exception as e:
+        return False,f'Exception raised in View File:{e}'
+
+
 
 import mimetypes
 #view file
@@ -953,13 +971,24 @@ def downloadFile(file_id):
             return redirect('/files')
 #delete file
 @app.route('/files/delete/<file_id>')
-def deleteFile():
+def deleteFile(file_id):
     if "id" not in session:
         return redirect('/login')
-    pass
-
-
-
+    if request.method == "GET":
+            #get file by file_id
+            status,file = deleteFileByFileId(fileid=file_id)
+            if status == True:
+                secure_filename = file['stored_name']
+                mime_type, _ = mimetypes.guess_type(
+                    secure_filename)
+                return send_file(
+                    f'upload/{secure_filename}',
+                    mimetype=mime_type,
+                    as_attachment=True
+                )
+            else:
+                flash(file,"err")
+                return redirect('/files')
 #logout route
 @app.route("/logout",methods=['GET'])
 def logout():
