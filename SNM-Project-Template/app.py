@@ -725,7 +725,7 @@ def GetFilesbyUserId(userid):
         if connection == "Connection Failed":
             return False,"Database Connection Failed"
         else:
-            cursor = connection.cursor()
+            cursor = connection.cursor(dictionary=True)
             get_file_by_userid = """select * from file_data
             where user_id=%s;"""
             cursor.execute(get_file_by_userid,(userid,))
@@ -745,6 +745,7 @@ def myfiles():
         #get all the files
         status,files = GetFilesbyUserId(userid=userid)
         print(files)
+        print(status)
         if status:
             return render_template('files.html',
                                    files=files)
