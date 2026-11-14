@@ -498,13 +498,40 @@ def login():
         else:
             return redirect('/login') 
 
+#total notes count
+#total files count
+def getFilesAndNotesCount(user_id):
+    try:
+        connection = getConnectionWithDB()
+        if connection == "Connection Failed":
+            return False,"Database Connection Failed"
+        else:
+            cursor = connection.cursor()
+            get_notes_count = """SELECT COUNT(*) FROM NOTES 
+                             WHERE USER_ID = %s;"""
+            cursor.execute(get_notes_count,(user_id,))
+            notes_count=cursor.fetchone()[0]
+            get_files_count="""select count(*) from file_data
+                            where user_id=%s;"""
+            cursor.execute(get_files_count,(user_id,))
+            files_count = cursor.fetchone()[0]
+            cursor.close()
+            connection.close()
+            return notes_count,files_count
+    except Exception as e:
+        return False,f'Exception raised in count:{e}'
+
 @app.route('/dashboard')
 def dashboard():
     #if the user data is not in the session redirect to login page
     if "id" not in session:
         return redirect("/login")
+    userid = session['id']
+    notes_count,files_count = getFilesAndNotesCount(userid)
     return render_template('dashboard.html',
-                           username=session['name'])
+                           username=session['name'],
+                           total_notes = notes_count,
+                           total_files=files_count)
 #profile route
 @app.route('/user/profile',methods=['GET'])
 def profile():
@@ -925,8 +952,6 @@ def deleteFileByFileId(fileid):
             return True,"File Deleted Successfully"
     except Exception as e:
         return False,f'Exception raised in View File:{e}'
-
-
 
 import mimetypes
 #view file
