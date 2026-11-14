@@ -559,16 +559,20 @@ def verify():
 #----------------------------
 #       Notes Routes
 #-----------------------------
-def getNotesByUserId(user_id):
+def getNotesByUserId(user_id,filename=None):
     try:
         connection = getConnectionWithDB()
         if connection == "Connection Failed":
             return False,"Database connection Failed"
         else:
             cursor = connection.cursor(dictionary=True)
-            get_notes_by_id="""SELECT * FROM NOTES WHERE
-            USER_ID = %s;"""
-            cursor.execute(get_notes_by_id,(user_id,))
+            query = " where user_id = %s"
+            values = [user_id]
+            if filename:
+                query +=" and title = %s"
+                values.append(filename)
+            get_notes_by_id="""SELECT * FROM NOTES"""+query
+            cursor.execute(get_notes_by_id,tuple(values))
             notes = cursor.fetchall()
             connection.commit()
             cursor.close()
@@ -582,16 +586,28 @@ def mynotes():
     if "id" not in session:
         return redirect('/login')
     if request.method == "GET":
+        notes_name = request.args.get('searchnotes')
         #get user notes from the database
         id = session['id']
         print(id)
-        status,notes = getNotesByUserId(user_id=id)
+        status,notes = getNotesByUserId(user_id=id,
+                                        filename=notes_name)
         print(notes)
         if status == True:
             return render_template("notes.html",
                                    notes = notes)
         else:
             return render_template('notes.html',err=notes)
+    if request.method == "POST":
+        notes_name = request.args.get('searchnotes')
+        id = session['id']
+        print(notes_name)
+        status,notes = getNotesByUserId(user_id=id,
+                                        filename=notes_name)
+        if status==True:
+            return render_template('notes.html')
+
+    
 #insert notes records in table
 def addNotesRecord(user_id:int,title:str,content:str):
     try:
