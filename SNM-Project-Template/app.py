@@ -566,13 +566,12 @@ def getNotesByUserId(user_id,filename=None):
             return False,"Database connection Failed"
         else:
             cursor = connection.cursor(dictionary=True)
-            query = " where user_id = %s"
+            query = "select * from notes where user_id=%s"
             values = [user_id]
             if filename:
-                query +=" and title = %s"
-                values.append(filename)
-            get_notes_by_id="""SELECT * FROM NOTES"""+query
-            cursor.execute(get_notes_by_id,tuple(values))
+                query +=" and title LIKE %s"
+                values.append("%" + filename + "%")
+            cursor.execute(query,tuple(values))
             notes = cursor.fetchall()
             connection.commit()
             cursor.close()
@@ -580,32 +579,27 @@ def getNotesByUserId(user_id,filename=None):
             return True,notes
     except Exception as e:
         return False,f'Exception raised in add notes:{e}' 
-
 @app.route('/notes',methods=['GET','POST'])
 def mynotes():
     if "id" not in session:
         return redirect('/login')
     if request.method == "GET":
-        notes_name = request.args.get('searchnotes')
-        #get user notes from the database
-        id = session['id']
-        print(id)
-        status,notes = getNotesByUserId(user_id=id,
-                                        filename=notes_name)
-        print(notes)
+        status,notes = getNotesByUserId(user_id=session['id'])
         if status == True:
             return render_template("notes.html",
                                    notes = notes)
         else:
             return render_template('notes.html',err=notes)
     if request.method == "POST":
-        notes_name = request.args.get('searchnotes')
-        id = session['id']
-        print(notes_name)
-        status,notes = getNotesByUserId(user_id=id,
-                                        filename=notes_name)
-        if status==True:
-            return render_template('notes.html')
+        notes_name = request.form.get('searchnotes','').strip()
+        status,notes = getNotesByUserId(
+            user_id=session['id'],
+            filename=notes_name
+        )
+        if status == True:
+            return render_template('notes.html',notes=notes)
+        else:
+            return render_template('notes.html',err=notes)
 
     
 #insert notes records in table
