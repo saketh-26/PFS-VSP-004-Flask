@@ -50,6 +50,24 @@ My Files - SNS
     {% endif %}
 </div>
 
+<div>
+    <form action="{{ url_for('myfiles') }}" method="POST">
+        <label for="searchfiles">Search</label>
+
+        <input
+            type="text"
+            name="searchfiles"
+            id="searchfiles"
+            placeholder="Enter filename"
+            value="{{ request.form.get('searchfiles', '') }}"
+        >
+        <button type="submit">Search</button>
+    </form>
+
+    <a href="{{ url_for('myfiles') }}">Remove Filter</a>
+</div>
+
+
 {% if files %}
 
 <div class="notes-grid">

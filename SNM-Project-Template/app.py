@@ -756,7 +756,7 @@ def delete_notes(note_id):
 #           FILES
 #-----------------------------
 #fetch the files 
-def GetFilesbyUserId(userid):
+def GetFilesbyUserId(userid,filename=None):
     try:
         connection = getConnectionWithDB()
         if connection == "Connection Failed":
@@ -765,17 +765,23 @@ def GetFilesbyUserId(userid):
             cursor = connection.cursor(dictionary=True)
             #dictionary = True enables filename to be printed
             #in files page as it fetches fileid and storedname
-            get_file_by_userid = """select * from file_data
-            where user_id=%s;"""
-            cursor.execute(get_file_by_userid,(userid,))
+            query = "SELECT * FROM file_data WHERE user_id = %s"
+            values = [userid]
+            if filename:
+                query += " AND stored_name LIKE %s"
+                values.append("%" + filename + "%")
+            #get_file_by_userid = """select * from file_data
+            #where user_id=%s;"""
+            #cursor.execute(get_file_by_userid,(userid,))
+            cursor.execute(query, tuple(values))
             files=cursor.fetchall()
             cursor.close()
             connection.close()
             return True,files
     except Exception as e:
-        return False,f'Exception raised in Files:{e}'
+        return False,f'Exception raised in Search Files:{e}'
 
-@app.route('/files')
+@app.route('/files',methods=['GET','POST'])
 def myfiles():
     if "id" not in session:
         return redirect('/login')
@@ -791,6 +797,17 @@ def myfiles():
         else:
             msg = files
             flash(msg,"err")
+            return render_template('files.html')
+    if request.method == "POST":
+        filename = request.form.get('searchfiles', '').strip()
+        status, files = GetFilesbyUserId(
+            userid=session['id'],
+            filename=filename
+        )
+        if status == True:
+            return render_template('files.html', files=files)
+        else:
+            flash(files, "err")
             return render_template('files.html')
 
 #check file exist in allowed types
