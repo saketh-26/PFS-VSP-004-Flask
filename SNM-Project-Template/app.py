@@ -521,6 +521,24 @@ def getFilesAndNotesCount(user_id):
     except Exception as e:
         return False,f'Exception raised in count:{e}'
 
+def recentNotes(user_id):
+    try:
+        connection = getConnectionWithDB()
+        if connection == "Connection Failed":
+            return False,"Database Connection Failed"
+        else:
+            cursor= connection.cursor(dictionary=True)
+            get_recent_notes = """SELECT * FROM NOTES
+                              WHERE USER_ID=%s ORDER BY updated_at
+                              DESC LIMIT 3;"""
+            cursor.execute(get_recent_notes,(user_id,))
+            recent_notes = cursor.fetchall()
+            cursor.close()
+            connection.close()
+            return True,recent_notes
+    except Exception as e:
+        return False,f"Exception raised in recent notes:{e}"
+    
 @app.route('/dashboard')
 def dashboard():
     #if the user data is not in the session redirect to login page
@@ -528,10 +546,13 @@ def dashboard():
         return redirect("/login")
     userid = session['id']
     notes_count,files_count = getFilesAndNotesCount(userid)
+    _,recent_notes = recentNotes(userid)
+    print(recent_notes)
     return render_template('dashboard.html',
                            username=session['name'],
                            total_notes = notes_count,
-                           total_files=files_count)
+                           total_files=files_count,
+                           notes=recent_notes)
 #profile route
 @app.route('/user/profile',methods=['GET'])
 def profile():
