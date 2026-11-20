@@ -5,6 +5,7 @@ def createTables():
     try:
         db_config = DatabaseConnection()
         cursor = db_config.cursor()
+        #print(curso)
         users_table_query = """
         CREATE TABLE IF NOT EXISTS USERS(
         USERID BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -39,6 +40,60 @@ def createTables():
         UPDATE CURRENT_TIMESTAMP
         );"""
 
+        orders_table_query = """
+        CREATE TABLE IF NOT EXISTS ORDERS(
+        ORDERID BIGINT AUTO_INCREMENT PRIMARY KEY,
+        USERID BIGINT,
+        STATUS ENUM('SHIPPED','DELIVERED','CANCELLED','PENDING')
+        DEFAULT 'PENDING',
+        ADDRESS VARCHAR(255),
+        CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (USERID) REFERENCES USERS(USERID)
+        );"""
+
+        orderdetails_table_query = """
+        CREATE TABLE IF NOT EXISTS ORDER_DETAILS(
+        ORDERID BIGINT,
+        PRODUCTID BIGINT,
+        QUANTITY INT UNSIGNED DEFAULT 1,
+        PRICE FLOAT(15,2) DEFAULT 0.0,
+        SUBTOTAL FLOAT(15,2) GENERATED ALWAYS AS (QUANTITY * PRICE) STORED,
+        FOREIGN KEY(ORDERID) REFERENCES ORDERS(ORDERID),
+        FOREIGN KEY(PRODUCTID) REFERENCES PRODUCTS(PRODUCTID)
+        );"""
+
+        payments_table_query = """
+        CREATE TABLE IF NOT EXISTS PAYMENTS(
+        PAYMENTID BIGINT AUTO_INCREMENT PRIMARY KEY,
+        USERID BIGINT,
+        ORDERID BIGINT,
+        METHOD ENUM('CASH','UPI','NETBANKING'),
+        AMOUNT FLOAT(20,2) DEFAULT 0.0,
+        CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(USERID) REFERENCES USERS(USERID),
+        FOREIGN KEY(ORDERID) REFERENCES ORDERS(ORDERID)
+        );"""
+
+        cart_table_query = """
+        CREATE TABLE IF NOT EXISTS CART(
+        CARTID BIGINT AUTO_INCREMENT PRIMARY KEY,
+        USERID BIGINT,
+        PRODUCTID BIGINT,
+        QUANTITY INT DEFAULT 1,
+        FOREIGN KEY(USERID) REFERENCES USERS(USERID),
+        FOREIGN KEY(PRODUCTID) REFERENCES PRODUCTS(PRODUCTID)
+        );"""
+        tables = [
+            users_table_query,
+            products_table_query,
+            orders_table_query,
+            orderdetails_table_query,
+            payments_table_query,
+            cart_table_query
+        ]
+        for table_query in tables:
+            cursor.execute(table_query)
+        return "Tables Created"
     except Exception as e:
         return f'Something wrong in Database/tables.py : {e}'
     
