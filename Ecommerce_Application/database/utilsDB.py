@@ -33,5 +33,28 @@ class AuthQueries:
                     WHERE EMAIL = %s""",(email,),
                 )
             return cursor.fetchone()
+    @staticmethod
+    def saveVerificationCode(user_id,code_hash):
+        with DatabaseConnection() as connection:
+            #This query generates and stores a new otp for user
+            #while preventing them from requesting new codes
+            #too quickly
+            with connection.cursor() as cursor:
+                cursor.execute(
+                    """UPDATE USERS SET OTP_HASH=%s,
+                    OTP_EXPIRES_AT=UTC_TIMESTAMP() + 
+                    INTERVAL 10 MINUTE,
+                    OTP_ATTEMPTS=0 WHERE USER_ID=%s
+                    AND ROLE ='USER' AND IS_ACTIVE=TRUE
+                    AND IS_VERIFIED=FALSE
+                    AND (OTP_EXPIRES_AT IS NULL
+                    OR OTP_EXPIRES_AT <= UTC_TIMESTAMP() +
+                    INTERVAL 9 MINUTE)""",(code_hash,user_id),)
+                saved = cursor.rowcount == 1
+                connection.commit()
+                return saved
+
+
+
     
 
