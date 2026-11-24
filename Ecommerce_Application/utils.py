@@ -1,6 +1,24 @@
 import os
 import smtplib
 from email.message import EmailMessage
+import secrets
+import hmac
+
+#This expression generates a cryptogrphicalluy secure 
+#6 digit random numeric string with leading zeros if the
+#number is smaller than 100,000
+def generate_otp():
+    return f'{secrets.randbelow(1_000_000):06d}' 
+#in above case randbelow is generating 42 --> output becomes
+#000042
+
+def otp_hash(user_id,code):
+    secret = os.getenv("OTP_SECRET")
+    if not secret:
+        raise RuntimeError("Set OTP_SECRET in .env")
+    message = f"{user_id}:{code}".encode("utf-8")
+    return hmac.new(secret.encode("utf-8"),message,
+                    "sha256").hexdigest()
 
 def send_verification_email(email,otp):
     """Sending Verification Email"""
