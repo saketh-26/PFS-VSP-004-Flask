@@ -105,7 +105,7 @@ def register():
 
 @app.route('/verify',methods=['GET','POST'])
 def verify():
-    pending = session.get("pending verification")
+    pending = session.get("pending_verification")
     if not pending:
         return redirect(url_for("login"))
     if request.method=="GET":
