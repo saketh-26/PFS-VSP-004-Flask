@@ -20,7 +20,7 @@ from utils import send_verification_email,generate_otp,otp_hash
 
 load_dotenv(Path(__file__).with_name(".env"))
 app = Flask(__name__) 
-app.secret_key = os.getenv("SECRET_KEY")
+app.secret_key = os.getenv("OTP_SECRET")
 if not app.secret_key:
     raise RuntimeError("Set SECRET_KEY in .env before " \
     "starting the app.")
@@ -68,6 +68,23 @@ def send_registration_code(user_id,email):
 def register():
     if request.method == "GET":
         return render_template("register.html")
+    name = request.form.get("name","").strip()
+    email = request.form.get("email","").strip().lower()
+    phone = request.form.get("phone","").strip()
+    password=request.form.get("password","")
+    confirm_password = request.form.get("confirm_password","")
+    if not name or len(name) > 50 or len(phone) >20:
+        flash("Enter a name upto 50characters and a phone"
+        "number up to 20characters","danger")
+        return redirect(url_for('register'))
+    #regex match -->basic structure of an email
+    #[^\s@] --> one or more characters excluding whitespace and @
+    if len(email)>50 or not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+",email):
+        flash("Enter a valid email address","danger")
+
+@app.route('/login')
+def login():
+    return render_template('login.html')
 
 @app.route("/products")
 def products():
