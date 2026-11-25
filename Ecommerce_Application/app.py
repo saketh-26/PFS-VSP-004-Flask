@@ -102,8 +102,44 @@ def register():
     session['pending_verification'] = {"id":user_id,"email":email}
     send_registration_code(user_id,email)
     return redirect(url_for("verify"))    
-        
-    
+
+@app.route('/verify',methods=['GET','POST'])
+def verify():
+    pending = session.get("pending verification")
+    if not pending:
+        return redirect(url_for("login"))
+    if request.method=="GET":
+        return render_template("verify.html",
+                               email=pending['email'])
+    code = request.form.get("otp","").strip()
+    if not re.fullmatch(r"[0-9]{6}",code):
+        flash("Enter the Six-digit code from your email,",
+              "danger")
+        return redirect(url_for("verify"))
+    user_id = pending["id"]
+    try:
+        verified = AuthQueries.verifyCode(user_id,
+                                          otp_hash(user_id,code))
+    except Error:
+        app.logger.exception("Could not verify the user")
+        flash("Verification failed..Please try again later",
+              "danger")
+        return redirect(url_for("verify"))
+    if not verified:
+        flash("The Code is incorrect,expired or out of attempts",
+              "danger")
+        return redirect(url_for("verify"))
+    session.pop("pending_verification",None)
+    flash("Email Verified.You can login","success")
+    return redirect(url_for("login"))    
+
+@app.post("/verify/resend")
+def resend_verification():
+    pending = session.get("pending_verification")
+    if not pending:
+        return redirect(url_for("login"))
+    send_registration_code(pending["id"],pending["email"])
+    return redirect(url_for("verify"))
 
 @app.route('/login')
 def login():
