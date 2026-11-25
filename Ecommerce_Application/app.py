@@ -141,9 +141,42 @@ def resend_verification():
     send_registration_code(pending["id"],pending["email"])
     return redirect(url_for("verify"))
 
-@app.route('/login')
+@app.route('/login',methods=["GET","POST"])
 def login():
-    return render_template('login.html')
+    if request.method == "GET":
+        return render_template('login.html')
+    email = request.form.get("email","").strip().lower()
+    password = request.form.get("password","").encode("utf-8")
+    try:
+        user = AuthQueries.getUserData(email)
+    except Error:
+        app.logger.exception("Couldnot lokup user")
+        flash("Login is temporarily unavailable","danger")
+        return redirect(url_for("login"))
+    if not user or not password or len(password) > 72 or not bcrypt.checkpw(
+        password,user["hashpassword"].encode("ascii")):
+        flash("Incorrect email or password","danger")
+        return redirect(url_for("login"))
+    if not user["is_active"]:
+        flash("This account is inactive","danger")
+        return redirect(url_for("login"))
+    role=user['role'].upper()
+    session.clear()
+    if not user["is_verified"]:
+        if role == "USER":
+            session["pending_verification"] = {
+                "id":user['userid'],
+                "email":user["email"]
+            }
+            send_registration_code(user["userid"],user["email"])
+            return redirect(url_for("verify"))
+        flash("This accoount requires setup","danger")
+        return redirect(url_for("verify"))
+    session["id"] = user["userid"]
+    session["name"] = user["username"]
+    session["email"] = user["email"]
+    session["role"] = role
+    return redirect(url_for("products"))
 
 @app.route("/products")
 def products():
