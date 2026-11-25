@@ -81,6 +81,29 @@ def register():
     #[^\s@] --> one or more characters excluding whitespace and @
     if len(email)>50 or not re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+",email):
         flash("Enter a valid email address","danger")
+        return redirect(url_for('register'))
+    if password!=confirm_password:
+        flash("Passwords dont match","danger")
+        return redirect(url_for('register'))
+    password_hash = bcrypt.hashpw(password.encode("utf-8"),
+                                  bcrypt.gensalt()).decode("ascii")
+    try:
+        user_id=AuthQueries.insertUserRecord(
+            name,email,phone or None,password_hash
+        )
+    except Error as error:
+        if error.errno == errorcode.ER_DUP_ENTRY:
+            flash("Email is already registered.Log in to continue","info")
+            return redirect(url_for("login"))
+        app.logger.exception("Couldnot create a user")
+        flash("Registration failed.Please try again","danger")
+        return redirect(url_for("register"))
+    session.clear()
+    session['pending_verification'] = {"id":user_id,"email":email}
+    send_registration_code(user_id,email)
+    return redirect(url_for("verify"))    
+        
+    
 
 @app.route('/login')
 def login():
