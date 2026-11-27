@@ -17,6 +17,7 @@ from flask import (
 from mysql.connector import Error,errorcode
 from database import AuthQueries,createTables
 from utils import send_verification_email,generate_otp,otp_hash
+from database.utilsDB import get_active_products
 
 load_dotenv(Path(__file__).with_name(".env"))
 app = Flask(__name__) 
@@ -177,10 +178,19 @@ def login():
     session["email"] = user["email"]
     session["role"] = role
     return redirect(url_for("products"))
-
 @app.route("/products")
 def products():
-    return render_template("user/products.html")
+    try:
+        products=get_active_products()
+    except Error:
+        app.logger.exception("Could not load products")
+        return render_template(
+            "user/products.html",
+            products=[],catalog_unavailable=True
+        ),503
+    return render_template("user/products.html",
+                           products=products)
+
 @app.route("/logout")
 def logout():
     session.clear()
