@@ -93,3 +93,20 @@ class AuthQueries:
                         )
             connection.commit()
             return verified
+
+#Define Active products
+def get_active_products():
+    with DatabaseConnection() as connection:
+        with connection.cursor(dictionary=True) as cursor:
+            cursor.execute(
+                """SELECT PRODUCTNAME AS name,
+                CATEGORY AS category,
+                SALEPRICE AS price,
+                COALESCE(QUANTITY,0)AS quantity,
+                IMGNAME AS image_name,
+                STOREDPATH AS image_path
+                FROM PRODUCTS WHERE IS_ACTIVE=TRUE
+                ORDER BY PRODUCTID DESC"""
+            )
+            return cursor.fetchall()
+
