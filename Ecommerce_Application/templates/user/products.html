@@ -7,24 +7,52 @@
     <div class="container">
         <h1 class="fw-bold mb-4">Products</h1>
 
-        <div class="row g-4">
-            {% for number in range(1, 5) %}
-                <div class="col-6 col-lg-3">
-                    <div class="card border-0 shadow-sm h-100">
-                        <div class="bg-light text-center py-5">
-                            <i class="bi bi-box-seam text-secondary"
-                               style="font-size: 80px;"
-                               aria-hidden="true"></i>
-                        </div>
+        {% if catalog_unavailable %}
+            <p role="alert">Products are temporarily unavailable.</p>
+        {% else %}
+            <div class="row g-4">
+                {% for product in products %}
+                    <div class="col-6 col-lg-3">
+                        <div class="card border-0 shadow-sm h-100">
+                            {% if product.image_name %}
+                                <img class="card-img-top bg-light p-2"
+                                     src="{{ url_for('static', filename='images/products/' ~ product.image_name) }}"
+                                     alt="{{ product.name }}"
+                                     loading="lazy"
+                                     style="height: 200px; object-fit: contain;">
+                            {% else %}
+                                <div class="bg-light d-flex align-items-center justify-content-center"
+                                     style="height: 200px;">
+                                    <i class="bi bi-box-seam text-secondary"
+                                       style="font-size: 80px;"
+                                       aria-hidden="true"></i>
+                                </div>
+                            {% endif %}
 
-                        <div class="card-body">
-                            <h2 class="h5 card-title">Premium Product {{ number }}</h2>
-                            <p class="fw-bold mb-0">₹999</p>
+                            <div class="card-body">
+                                <h2 class="h5 card-title">{{ product.name }}</h2>
+                                {% if product.category %}
+                                    <p class="small text-muted">{{ product.category }}</p>
+                                {% endif %}
+                                {% if product.price is not none %}
+                                    <p class="fw-bold">₹{{ "%.2f"|format(product.price) }}</p>
+                                {% endif %}
+
+                                {% if product.quantity > 0 %}
+                                    <span class="text-success">In stock</span>
+                                {% else %}
+                                    <span class="text-muted">Out of stock</span>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
-                </div>
-            {% endfor %}
-        </div>
+                {% else %}
+                    <div class="col-12">
+                        <p class="text-muted">No products are available yet.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
     </div>
 </section>
 {% endblock %}
