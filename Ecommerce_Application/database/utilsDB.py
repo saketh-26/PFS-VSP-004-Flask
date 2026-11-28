@@ -133,3 +133,17 @@ def get_product_by_id(product_id):
                 LIMIT 1""",(product_id,),
             )
             return cursor.fetchone()
+
+def get_product_categories():
+    with DatabaseConnection() as connection:
+        with connection.cursor(dictionary=True) as cursor:
+            #Fetches unique alphabetical list of non-empty
+            #product categories
+            cursor.execute(
+                """SELECT DISTINCT TRIM(CATEGORY) AS category
+                FROM PRODUCTS
+                WHERE IS_ACTIVE = TRUE
+                AND TRIM(CATEGORY) <>
+                ORDER BY category"""
+            )
+            return cursor.fetchall()
