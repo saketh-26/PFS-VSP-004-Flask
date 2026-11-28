@@ -95,18 +95,41 @@ class AuthQueries:
             return verified
 
 #Define Active products
-def get_active_products():
+def get_active_products(category=""):
+    query = """
+        SELECT PRODUCTID AS id,
+               PRODUCTNAME AS name,
+               CATEGORY AS category,
+               SALEPRICE AS price,
+               COALESCE(QUANTITY, 0) AS quantity,
+               STOREDPATH AS image_path
+        FROM PRODUCTS
+        WHERE IS_ACTIVE = TRUE
+    """
+    params = ()
+    #to add up the categories
+    if category:
+        query += " AND TRIM(CATEGORY) = %s"
+        params = (category,)
+    query += " ORDER BY PRODUCTID DESC"
+    with DatabaseConnection() as connection:
+        with connection.cursor(dictionary=True) as cursor:
+            cursor.execute(query, params)
+            return cursor.fetchall()
+#View a product
+def get_product_by_id(product_id):
     with DatabaseConnection() as connection:
         with connection.cursor(dictionary=True) as cursor:
             cursor.execute(
-                """SELECT PRODUCTNAME AS name,
+                """SELECT PRODUCTID AS id,
+                PRODUCTNAME AS name,
+                DESCRIPTION AS description,
                 CATEGORY AS category,
                 SALEPRICE AS price,
-                COALESCE(QUANTITY,0)AS quantity,
-                IMGNAME AS image_name,
+                COALESCE(QUANTITY,0) AS quantity,
                 STOREDPATH AS image_path
-                FROM PRODUCTS WHERE IS_ACTIVE=TRUE
-                ORDER BY PRODUCTID DESC"""
+                FROM PRODUCTS WHERE PRODUCTID =%s
+                AND IS_ACTIVE = TRUE 
+                LIMIT 1""",(product_id,),
             )
-            return cursor.fetchall()
-
+            return cursor.fetchone()
