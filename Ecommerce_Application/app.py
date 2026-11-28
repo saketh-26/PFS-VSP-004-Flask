@@ -17,7 +17,7 @@ from flask import (
 from mysql.connector import Error,errorcode
 from database import AuthQueries,createTables
 from utils import send_verification_email,generate_otp,otp_hash
-from database.utilsDB import get_active_products
+from database.utilsDB import get_active_products,get_product_by_id
 
 load_dotenv(Path(__file__).with_name(".env"))
 app = Flask(__name__) 
@@ -190,6 +190,19 @@ def products():
         ),503
     return render_template("user/products.html",
                            products=products)
+@app.route("/products/<int:product_id>")
+def product_details(product_id):
+    try:
+        product = get_product_by_id(product_id)
+    except Error:
+        app.logger.exception("Could not load products %s",
+                             product_id)
+        return "This Product is temporarily unavailable.",503
+    if product is None:
+        abort(404)
+    return render_template("user/product_details.html",
+                           product=product)
+
 
 @app.route("/logout")
 def logout():
